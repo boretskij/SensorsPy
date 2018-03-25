@@ -1,0 +1,17 @@
+sensors:
+  0x23:
+    BH1750FVI:
+      bme180
+  0x40:
+    SI7021:
+      si7021
+  0x76:
+    BMP280:
+      bmp280
+    BME280:
+      bme280
+  0x77:
+    BMP 085:
+      bmp085
+    BMP 180:
+      bmp180
