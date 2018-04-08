@@ -34,19 +34,6 @@ class SMBus:
                     self.sensors[bus_num].append(hex(device))
         return self.sensors
 
-bus = SMBus()
-print(bus.detect_all_devices())
-
-'''
-try:
-    bus = smbus.SMBus(0)
-except:
-    print("Not found")
-
-for device in range(128):
-    try:
-        bus.read_byte(device)
-        print(hex(device))
-    except:
-        t = "d"
-'''
+if __name__ == "__main__":
+   bus = SMBus()
+   print(bus.detect_all_devices())
