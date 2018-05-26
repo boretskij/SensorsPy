@@ -4,8 +4,12 @@ import smbus2 as smbus
 import system.smbus as SMBus
 import devices.sensors.sht21
 
-bus = SMBus.SMBus()
+bus = SMBus.SMBus(1)
 print(bus.detect_all_devices())
+
+file = open('config.yaml','r')
+
+print(yaml.load(file.read()))
 
 ## Test
 #bus = smbus.SMBus(1)

@@ -1,0 +1,12 @@
+servers:
+  cache:
+    redis:
+      host: localhost
+      port: 6379
+    memcached:
+      host: localhost
+      port: 11211  
+sensors:
+  PMS3003:
+    name: pms3003
+    port: ttyS1

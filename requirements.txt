@@ -1,3 +1,7 @@
+setuptools
+smbus2
 python3-memcached
 pyyaml
+pyserial
 hbmqtt
+redis
