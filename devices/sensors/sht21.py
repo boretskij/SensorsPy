@@ -85,7 +85,7 @@ class SHT21:
 
 if __name__ == "__main__":
     try:
-        bus = smbus.SMBus(1)
+        bus = smbus.SMBus(0)
         with SHT21(bus) as sht21:
             print ("Temperature: %s"%sht21.read_temperature())
             print ("Humidity: %s"%sht21.read_humidity())

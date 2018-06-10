@@ -2,7 +2,7 @@ import redis
 
 class Redis:
 
-    def __init__(self,config):
+    def __init__(self,config={'host':'localhost','port':6379,'db':0}):
         self.host = config['host']
         self.port = config['port']
         self.db = config['db']
@@ -12,7 +12,7 @@ class Redis:
         return redis.StrictRedis(host=self.host, port=self.port, db=self.db)
 
     def set(self,key,data):
-        self.redis.set(key,element)
+        self.redis.set(key,data)
 
 ##redis = Redis({'host':'localhost','port':6379,'db':0})
 

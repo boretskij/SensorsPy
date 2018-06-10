@@ -40,4 +40,5 @@ class PMS3003:
 
 ## Sample
 ## pms = PMS3003({'terminal':'/dev/ttyS1','baudrate':9600,'timeout':2})
-
+## data = pms.get_data()
+## print(data)

@@ -48,7 +48,7 @@ class bmp180:
     calMD = 0
 
 
-    def __init__(self, bus_num, address):
+    def __init__(self, bus_num=0, address=0x77):
         self.bus_num = bus_num
         self.address = address
         self.bus = smbus.SMBus(bus_num)
@@ -220,8 +220,16 @@ class bmp180:
 
         return altitude
 
+    def get_data(self):
+        data = {}
+        data['temperature'] = self.get_temp()
+        data['pressure'] = self.get_pressure()
+        data['altitude'] = self.get_altitude()
+
+        return data
+
 if __name__ == "__main__":
-    bmp = bmp180(1,0x77)
+    bmp = bmp180(0,0x77)
     print(bmp.get_temp())
     print(bmp.get_pressure())
     print(bmp.get_altitude())
