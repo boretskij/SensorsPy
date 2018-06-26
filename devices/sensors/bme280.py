@@ -133,6 +133,7 @@ class bme280:
         return self.filter
 
     def get_data(self):
+        self.set_mode(MODE_FORCED)
         if self.get_mode() == MODE_FORCED:
             t_measure_max = 1.25 + (2.3 * self.to) + (2.3 * self.po + 0.575) + (2.3 * self.ho + 0.575)
             time.sleep(t_measure_max/1000.0)
