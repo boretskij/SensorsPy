@@ -14,6 +14,13 @@ class HTTPReq:
         request.add_header("Content-Length", len(jdata))
         result = urllib.urlopen(request,jdata)
         return result
+    
+    def post_binary(self,url,binary_data):
+        request = urllib.Request(url,binary_data)
+        request.add_header('Content-Length','%d' % len(binary_data))
+        request.add_header('Content-Type','application/octet-stream')
+        result = urllib.urlopen(request)
+        return result
 
 #http = HTTPReq()
 ##print(http.get("https://checkip.amazonaws.com/"))
