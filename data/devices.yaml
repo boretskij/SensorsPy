@@ -1,0 +1,19 @@
+interface:
+  i2c:
+    displays:
+      '0x27':
+        hd44780:
+          hd44780
+    sensors:
+      '0x23':
+        BH1750FVI:
+          bh1750
+      '0x40':
+        SHT21:
+          sht21
+      '0x76':
+        BME280:
+          bme280
+      '0x77':
+        BMP 180:
+          bmp180

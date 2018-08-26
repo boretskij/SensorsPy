@@ -15,9 +15,9 @@ class SHT21:
     _TRIGGER_TEMPERATURE_NO_HOLD = 0xF3
     _TRIGGER_HUMIDITY_NO_HOLD = 0xF5
 
-    def __init__(self, bus):
+    def __init__(self, bus=1, address=0x40):
         """According to the datasheet the soft reset takes less than 15 ms."""
-        self.bus = bus
+        self.bus = smbus.SMBus(bus)
         self.bus.write_byte(self._I2C_ADDRESS, self._SOFTRESET)
         time.sleep(0.015)
 

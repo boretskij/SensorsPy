@@ -57,7 +57,7 @@ class HD44780:
     _Rs = 0x01  # Register select bit
 
 
-    def __init__(self, addr, port, numlines=2, clear=True):
+    def __init__(self, port, addr, numlines=2, clear=True):
         self._addr = addr
         self._smbus = smbus.SMBus(port)
         self._backlightval = 0x08 # always on

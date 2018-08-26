@@ -12,7 +12,7 @@ import smbus2 as smbus
 import math
 from time import sleep
 
-class bmp180:
+class BMP180:
     # Global variables
     address = None
     mode = 1 # TODO: Add a way to change the mode
@@ -48,7 +48,7 @@ class bmp180:
     calMD = 0
 
 
-    def __init__(self, bus_num=0, address=0x77):
+    def __init__(self, bus_num=1, address=0x77):
         self.bus_num = bus_num
         self.address = address
         self.bus = smbus.SMBus(bus_num)
