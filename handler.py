@@ -1,4 +1,5 @@
 import yaml
+import time
 import datetime
 
 import lib.loader as DClass
@@ -14,7 +15,8 @@ class Handler:
 
     __devices = {'i2c':{}}
     __device_info_path = ""
-	
+
+    __devices_types = {'sensors':'sensors','displays':'displays'}
 	
     def __init__(self,config):
         self.__bus_count = config['bus']['count']
@@ -38,6 +40,32 @@ class Handler:
                     module_name = device_description['name'][device_name]
                     self.__devices[interface][bus]['module'][module_name] = {'type':device_type,'action':{}}
                     self.__devices[interface][bus]['module'][module_name]['action'] = self.__include_module(module_name,bus,device)
+
+    def get_all_sensors_data(self):
+        data = {}
+        for interface in self.__devices:
+            for bus in self.__devices[interface]:
+                for module in self.__devices[interface][bus]['module']:
+                    type = self.__devices[interface][bus]['module'][module]['type']
+                    if type==self.__devices_types['sensors']:
+                        data[module] = self.__devices[interface][bus]['module'][module]['action'].get_data()
+        return data
+
+    def show_data_displays(self,data={}):
+        for interface in self.__devices:
+            for bus in self.__devices[interface]:
+                for module in self.__devices[interface][bus]['module']:
+                    type = self.__devices[interface][bus]['module'][module]['type']
+                    if type==self.__devices_types['displays']:
+                        for line_number in data['text']:
+                            full_text = data['text'][line_number]
+                            self.__devices[interface][bus]['module'][module]['action'].setCursor(0,line_number)
+                            self.__devices[interface][bus]['module'][module]['action'].printstr(full_text)
+                            if 'backlight' in data:
+                                if data['backlight']==True:
+                                    self.__devices[interface][bus]['module'][module]['action'].backlight()
+                                elif data['backlight']==False:
+                                    self.__devices[interface][bus]['module'][module]['action'].noBacklight()
 
     def __load_yaml(self,path):
         file = open(path,'r')
