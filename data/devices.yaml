@@ -1,4 +1,10 @@
 interface:
+  serial:
+    sensors:
+      '/dev/ttyS1':
+        pms3003:
+          baudrate: 9600
+          timeout: 2
   i2c:
     displays:
       '0x27':
