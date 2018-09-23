@@ -5,8 +5,11 @@ class PMS3003:
     __bytes = 24
     __stop_byte = 66
 
+    __config = {}
+
     def __init__(self,config):
-        self.serial = port = serial.Serial(config['terminal'], baudrate = config['baudrate'], timeout = config['timeout'])
+        self.__config = config
+        self.__open()
 
     def __decode(self,upper,lower):
         return ((upper << 8) + lower)
@@ -33,12 +36,27 @@ class PMS3003:
 
         return data
 
+    def __open(self):
+        self.serial = serial.Serial(self.__config['terminal'], baudrate = self.__config['baudrate'], timeout = self.__config['timeout'])
+
     def __read(self):
         data = self.serial.read(self.__bytes)
+        sum = 0
+        for i in range(0,21):
+            sum += data[i]
+
+        checksum = self.__decode(data[22],data[23])
+
+        if (sum!=checksum):
+            self.serial.close()
+            self.__open()
+            return self.__read()
+
         return data
 
 
 ## Sample
-## pms = PMS3003({'terminal':'/dev/ttyS1','baudrate':9600,'timeout':2})
-## data = pms.get_data()
-## print(data)
+#while True:
+#    pms = PMS3003({'terminal':'/dev/ttyS1','baudrate':9600,'timeout':2})
+#    data = pms.get_data()
+#    print(data)
