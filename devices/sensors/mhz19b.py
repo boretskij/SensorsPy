@@ -10,10 +10,16 @@ import serial
 class MHZ19B:
 
     __bytes = 9
+    
+    __temperature = 40
 
     __config = {}
 
     __data = {'5000ppm':bytearray([0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x13, 0x88, 0xCB]),
+              '3000ppm':bytearray([0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x0B, 0xB8, 0xA3]),
+              '2000ppm':bytearray([0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x07, 0xD0, 0x8F]),
+              '1000ppm':bytearray([0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x03, 0xE8, 0x7B]),
+              'zeropoint':bytearray([0xFF, 0x01, 0x87, 0x00, 0x00, 0x00, 0x00, 0x00, 0x78]),
               'read': bytearray([0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79])}
 
     def __init__(self,config):
@@ -52,8 +58,9 @@ class MHZ19B:
     def get_data(self):
         source = self.__read()
         value = self.__decode(source[2],source[3])
+        temperature = source[4]-self.__temperature
         value = value * 0.4
-        return value
+        return {'co2':value,"temperature":temperature}
 ## Sample
 mh = MHZ19B({'terminal':'/dev/ttyS1','baudrate':9600,'timeout':2})
 while True:
