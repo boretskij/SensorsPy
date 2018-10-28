@@ -11,6 +11,7 @@ class MHZ19B:
 
     __bytes = 9
     
+    __co2 = 0.4
     __temperature = 40
 
     __config = {}
@@ -56,10 +57,15 @@ class MHZ19B:
         return data
 
     def get_data(self):
+        checksum = 1
+        temperature = 0
+        value = 0
         source = self.__read()
-        value = self.__decode(source[2],source[3])
-        temperature = source[4]-self.__temperature
-        value = value * 0.4
+        if (self.__checksum(source)):
+           checksum = 0
+           value = self.__decode(source[2],source[3])
+           temperature = source[4]-self.__temperature
+           value = value * self.__co2
         return {'co2':value,"temperature":temperature}
 ## Sample
 mh = MHZ19B({'terminal':'/dev/ttyS1','baudrate':9600,'timeout':2})
