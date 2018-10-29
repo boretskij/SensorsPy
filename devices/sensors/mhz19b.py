@@ -63,10 +63,10 @@ class MHZ19B:
         source = self.__read()
         if (self.__checksum(source)):
            checksum = 0
-           value = self.__decode(source[2],source[3])
-           temperature = source[4]-self.__temperature
-           value = value * self.__co2
-        return {'co2':value,"temperature":temperature}
+        value = self.__decode(source[2],source[3])
+        temperature = source[4]-self.__temperature
+        value = value * self.__co2
+        return {'co2':value,'temperature':temperature,'checksum':checksum}
 ## Sample
 mh = MHZ19B({'terminal':'/dev/ttyS1','baudrate':9600,'timeout':2})
 while True:
