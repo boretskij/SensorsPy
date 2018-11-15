@@ -42,7 +42,7 @@ class PMS3003:
     def __read(self):
         data = self.serial.read(self.__bytes)
         sum = 0
-        for i in range(0,21):
+        for i in range(0,22):
             sum += data[i]
 
         checksum = self.__decode(data[22],data[23])
