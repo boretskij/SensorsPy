@@ -20,7 +20,12 @@ class SHT21:
         self.bus = smbus.SMBus(bus)
         self.bus.write_byte(self._I2C_ADDRESS, self._SOFTRESET)
         time.sleep(0.015)
-
+    
+    def get_data(self):
+        temperature = self.read_temperature()
+        humidity = self.read_humidity()
+        return {'temperature':temperature,'humidity':humidity}
+    
     def read_temperature(self):    
         """Reads the temperature from the sensor.  Not that this call blocks
 	for 250ms to allow the sensor to return the data"""

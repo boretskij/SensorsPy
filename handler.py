@@ -45,7 +45,7 @@ class Handler:
                 for device in devices[address]:
                     self.__devices[interface][address]['module'][device] = {'type':type,'action':{}}
                     config = {'terminal':address,'baudrate':devices[address][device]['baudrate'],'timeout':devices[address][device]['timeout']}
-                    self.__devices[interface][address]['module'][device]['action'] = self.__include_module(device,interface,address,config)
+                    self.__devices[interface][address]['module'][device]['action'] = self.__include_module(device,{'interface':interface},address,config)
 
     def scan_i2c(self):
         bus = SMBus.SMBus(self.__bus_count)
@@ -60,7 +60,7 @@ class Handler:
                 for device_name in device_description['name']:
                     module_name = device_description['name'][device_name]
                     self.__devices[interface][bus]['module'][module_name] = {'type':device_type,'action':{}}
-                    self.__devices[interface][bus]['module'][module_name]['action'] = self.__include_module(module_name,bus,device)
+                    self.__devices[interface][bus]['module'][module_name]['action'] = self.__include_module(module_name,{'interface':interface,'number':bus},device)
 
     def get_all_sensors_data(self):
         data = {}
@@ -143,17 +143,19 @@ class Handler:
         return cache_value
 
     def __get_devices_info(self,interface):
-        return self.__device_info['interface'][interface]
-
+        if interface in self.__device_info['interface']:        
+            return self.__device_info['interface'][interface]
+        else:
+            return {}
     def __include_module(self,device,bus,address,additional={}):
         module = None
         module_status = False
         for prefix in self.__prefixes:
             module_path = self.__prefixes[prefix] + device + "." + device.upper()
             try:
-                if bus=='i2c':
-                    module = DClass.load(module_path)(bus,int(address,16))
-                elif bus=='serial':
+                if bus['interface']=='i2c':
+                    module = DClass.load(module_path)(bus['number'],int(address,16))
+                elif bus['interface']=='serial':
                     module = DClass.load(module_path)(additional)
                 module_status = True
             except:
@@ -170,10 +172,10 @@ if __name__ == "__main__":
                       {'custom':{'databases':{'influx':
                                 {'host':'','port':443,'ssl':True,'database':'user','username':'user','password':'password'}}},
                       'bus':{'count':1},
-				       'prefixes':{'sensors':'devices.sensors.','displays':'devices.displays.'},
+				       'prefixes':{'sensors':'devices.sensors.'},
                                        'files':'dd', 'devices':{'path':'data/devices.yaml'}})
     while True:
         data = handler.get_all_sensors_data()
         time.sleep(1)
-        print(data)
+#        print(data)
         handler.write_to_db(data,"InfluxDB")
