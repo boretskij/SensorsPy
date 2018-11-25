@@ -1,5 +1,6 @@
 import json
 import urllib.request as urllib
+import urllib.parse as urlparse
 
 class HTTPReq:
 
@@ -11,7 +12,10 @@ class HTTPReq:
             self.__auth = config['auth_token']
 
     def get(self,url):
-        url = urllib.urlopen(url)
+        request = urllib.Request(url)
+        if self.__auth!="":
+            request.add_header("Authorization",self.__auth)
+        url = urllib.urlopen(request)
         return url.read()
 
     def post_json(self,url,content):
