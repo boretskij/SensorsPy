@@ -8,6 +8,8 @@ import time
 
 class MQTT:
 
+    __root = '#'
+
     __topics = {}
 
     def __init__(self,configuration):
@@ -39,7 +41,7 @@ class MQTT:
                   self.status = True
                yield from asyncio.sleep(2)
 
-#    @asyncio.coroutine
+    @asyncio.coroutine
     def publish(self,topic,message,qos=QOS_0):
         self.connect.publish(topic, message.encode(),qos=qos)
 
@@ -55,7 +57,10 @@ class MQTT:
             message = yield from self.connect.deliver_message()
             packet = message.publish_packet
             topic = packet.variable_header.topic_name
-            self.__topics[topic]['callback']({"topic":topic,"data":packet.payload.data})
+            if topic in self.__topics:
+                self.__topics[topic]['callback']({"topic":topic,"data":packet.payload.data})
+            elif self.__root in self.__topics:
+                self.__topics[self.__root]['callback']({"topic":topic,"data":packet.payload.data})
 
     @asyncio.coroutine
     def __connect(self):
