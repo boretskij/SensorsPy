@@ -40,7 +40,8 @@ class MHZ19B:
         for i in range(1,8):
             sum += data[i]
         sum = ((255-sum)+1)
-        print(sum,data[8])
+        if (sum<0): # Quick fix for checksum because I don't see any problem with sensor data, but checksum always invalid
+            sum = sum + 256
         if (sum!=data[8]):
             status = False
 
