@@ -37,4 +37,4 @@ class InfluxDB:
         return self.http.get(data)
 
     def write_to_db(self,data):
-        return self.http.post_binary(self.__templates['write'],data.encode())
+        return self.http.post_binary(self.__templates['write'],data.encode(),True)

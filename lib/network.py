@@ -1,4 +1,5 @@
 import json
+import gzip
 import urllib.request as urllib
 import urllib.parse as urlparse
 
@@ -27,19 +28,27 @@ class HTTPReq:
         request.add_header("Content-Length", len(jdata))
         result = urllib.urlopen(request,jdata)
         return result
- 
-    def post_binary(self,url,binary_data,attempt_number=0):
+
+    def post_binary(self,url,binary_data,compress=False,attempt_number=0):
         if (attempt_number>=self.__attempt):
             return None
-        request = urllib.Request(url,binary_data)
+
+        source = binary_data
+
+        if compress:
+            source = gzip.compress(binary_data,compresslevel=9)
+
+        request = urllib.Request(url,source)
         if self.__auth!="":
             request.add_header("Authorization",self.__auth)
-        request.add_header('Content-Length','%d' % len(binary_data))
+        if compress:
+            request.add_header('Content-Encoding', 'gzip')
+        request.add_header('Content-Length','%d' % len(source))
         request.add_header('Content-Type','application/octet-stream')
         result = None
         try:
             result = urllib.urlopen(request)
         except:
             attempt_number +=1
-            return self.post_binary(url,binary_data,attempt_number)
+            return self.post_binary(url,binary_data,compress,attempt_number)
         return result
