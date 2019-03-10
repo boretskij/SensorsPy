@@ -1,6 +1,7 @@
 import yaml
 import time
 import datetime
+import socket
 
 import lib.loader as DClass
 import system.smbus as SMBus
@@ -25,12 +26,15 @@ class Handler:
 
     __devices_types = {'sensors':'sensors','displays':'displays'}
 
+    __hostname = ""
+
     def __init__(self,config):
         self.__bus_count = config['bus']['count']
         self.__prefixes = config['prefixes']
         self.__devices_files = config['files']
         self.__device_info_path = config['devices']['path']
         self.__device_info = self.__load_yaml(self.__device_info_path)
+	self.__hostname = socket.gethostname()
         self.__config = config['custom']
         self.scan_i2c();
         self.scan_serial();
@@ -96,10 +100,10 @@ class Handler:
         if database=="InfluxDB":
             time = self.__prepare_influx_time()
             source_data = ""
-            template = '{},sensor={} value={} {}\n'
+            template = '{},sensor={},hostname={} value={} {}\n'
             for device in data:
                 for measurement in data[device]:
-                    source_data += template.format(measurement,device,data[device][measurement],time)
+                    source_data += template.format(measurement,device,self.__hostname,data[device][measurement],time)
             cache_value = self.__cache_get("influxdb/batchCount")
             if cache_value==None:
                 self.__cache_set("influxdb/batchCount",1)
@@ -109,12 +113,13 @@ class Handler:
                 self.__cache_set("influxdb/batchData",batch_value)
                 current = cache_value+1
                 self.__cache_set("influxdb/batchCount",current)
-            elif cache_value==self.__db__config['batch']:
+            elif cache_value>=self.__db__config['batch']:
                 data = self.__cache_get("influxdb/batchData")+source_data
                 influx = Databases.InfluxDB(self.__config['databases']['influx'])
-                influx.write_to_db(data)
-                self.__cache_set("influxdb/batchCount",0)
-                self.__cache_set("influxdb/batchData","")
+                result = influx.write_to_db(data)
+		if result is not None:
+                    self.__cache_set("influxdb/batchCount",0)
+                    self.__cache_set("influxdb/batchData","")
             print(source_data)
             source_data = ""
 
