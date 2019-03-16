@@ -19,7 +19,7 @@ class SDS011:
 
         pm25 = (self.__decode(source[3],source[2])/10)
         pm100 = (self.__decode(source[5],source[4])/10)
-        data = {'pm2.5':pm25,'pm10.0':pm100}
+        data = {'pm25':pm25,'pm100':pm100}
 
         return data
 
