@@ -5,8 +5,42 @@ servers:
       port: 6379
     memcached:
       host: localhost
-      port: 11211  
-sensors:
-  PMS3003:
-    name: pms3003
-    port: ttyS1
+      port: 11211
+databases:
+  influxdb:
+    url: 'io.meteostation.online'
+    port: 443
+    ssl: true
+    database: 'test'
+    username: 'test'
+    password: 'test'
+scan:
+  i2c: 1
+  type: 'whitelist'
+prefixes:
+  sensors: 'devices.sensors.'
+interface:
+  serial:
+    sensors:
+      '/dev/ttyS1':
+        pms3003:
+          baudrate: 9600
+          timeout: 2
+  i2c:
+    displays:
+      '0x27':
+        hd44780:
+          hd44780
+    sensors:
+      '0x23':
+        BH1750FVI:
+          bh1750
+      '0x40':
+        SHT21:
+          sht21
+      '0x76':
+        BME280:
+          bme280
+      '0x77':
+        BMP 180:
+          bmp180

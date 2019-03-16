@@ -4,7 +4,7 @@ import datetime
 import socket
 
 import lib.loader as DClass
-import system.smbus as SMBus
+#import system.smbus as SMBus
 import lib.databases as Databases
 #import system.cache as Cache
 
@@ -34,7 +34,7 @@ class Handler:
         self.__devices_files = config['files']
         self.__device_info_path = config['devices']['path']
         self.__device_info = self.__load_yaml(self.__device_info_path)
-	self.__hostname = socket.gethostname()
+        self.__hostname = socket.gethostname()
         self.__config = config['custom']
         self.scan_i2c();
         self.scan_serial();
@@ -117,7 +117,7 @@ class Handler:
                 data = self.__cache_get("influxdb/batchData")+source_data
                 influx = Databases.InfluxDB(self.__config['databases']['influx'])
                 result = influx.write_to_db(data)
-		if result is not None:
+                if result is not None:
                     self.__cache_set("influxdb/batchCount",0)
                     self.__cache_set("influxdb/batchData","")
             print(source_data)
@@ -173,11 +173,14 @@ class Handler:
 
 if __name__ == "__main__":
     ## Just sample
+    configuration = yaml.load(open('config.yaml','r').read());
+    databases = configuration['databases']
+    prefixes = configuration['prefixes']
+    quit();
     handler = Handler(
-                      {'custom':{'databases':{'influx':
-                                {'host':'','port':443,'ssl':True,'database':'user','username':'user','password':'password'}}},
+                      {'custom':{'databases':databases},
                       'bus':{'count':1},
-				       'prefixes':{'sensors':'devices.sensors.'},
+				       'prefixes':prefixes,
                                        'files':'dd', 'devices':{'path':'data/devices.yaml'}})
     while True:
         data = handler.get_all_sensors_data()
