@@ -4,7 +4,7 @@ import datetime
 import socket
 
 import lib.loader as DClass
-#import system.smbus as SMBus
+import system.smbus as SMBus
 import lib.databases as Databases
 #import system.cache as Cache
 
@@ -22,7 +22,6 @@ class Handler:
     __devices_files = {}
 
     __devices = {'i2c':{},'serial':{}}
-    __device_info_path = ""
 
     __devices_types = {'sensors':'sensors','displays':'displays'}
 
@@ -32,8 +31,7 @@ class Handler:
         self.__bus_count = config['bus']['count']
         self.__prefixes = config['prefixes']
         self.__devices_files = config['files']
-        self.__device_info_path = config['devices']['path']
-        self.__device_info = self.__load_yaml(self.__device_info_path)
+        self.__device_info = config['devices']
         self.__hostname = socket.gethostname()
         self.__config = config['custom']
         self.scan_i2c();
@@ -52,9 +50,14 @@ class Handler:
                     self.__devices[interface][address]['module'][device]['action'] = self.__include_module(device,{'interface':interface},address,config)
 
     def scan_i2c(self):
-        bus = SMBus.SMBus(self.__bus_count)
-        bus_devices = bus.detect_all_devices()
+        whitelist = []
         interface = 'i2c'
+        source = self.__device_info['interface'][interface]
+        for type in source:
+            for address in source[type]:
+                whitelist.append(int(address,0))
+        bus = SMBus.SMBus(self.__bus_count)
+        bus_devices = bus.detect_all_devices(whitelist)
         for bus in bus_devices:
             self.__devices[interface][bus] = {'source':{},'module':{}}
             self.__devices[interface][bus]['source'] = bus_devices[bus]
@@ -92,10 +95,6 @@ class Handler:
                                 elif data['backlight']==False:
                                     self.__devices[interface][bus]['module'][module]['action'].noBacklight()
 
-    def __load_yaml(self,path):
-        file = open(path,'r')
-        return yaml.load(file.read())
-
     def write_to_db(self,data,database):
         if database=="InfluxDB":
             time = self.__prepare_influx_time()
@@ -115,7 +114,7 @@ class Handler:
                 self.__cache_set("influxdb/batchCount",current)
             elif cache_value>=self.__db__config['batch']:
                 data = self.__cache_get("influxdb/batchData")+source_data
-                influx = Databases.InfluxDB(self.__config['databases']['influx'])
+                influx = Databases.InfluxDB(self.__config['databases']['influxdb'])
                 result = influx.write_to_db(data)
                 if result is not None:
                     self.__cache_set("influxdb/batchCount",0)
@@ -176,12 +175,13 @@ if __name__ == "__main__":
     configuration = yaml.load(open('config.yaml','r').read());
     databases = configuration['databases']
     prefixes = configuration['prefixes']
-    quit();
+    interfaces = configuration['interface']
+#    quit();
     handler = Handler(
                       {'custom':{'databases':databases},
                       'bus':{'count':1},
-				       'prefixes':prefixes,
-                                       'files':'dd', 'devices':{'path':'data/devices.yaml'}})
+                      'prefixes':prefixes,
+                      'files':'dd', 'devices':{'interface':interfaces}})
     while True:
         data = handler.get_all_sensors_data()
         time.sleep(1)

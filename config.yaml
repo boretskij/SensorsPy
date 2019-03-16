@@ -8,7 +8,7 @@ servers:
       port: 11211
 databases:
   influxdb:
-    url: 'io.meteostation.online'
+    host: 'io.meteostation.online'
     port: 443
     ssl: true
     database: 'test'
@@ -23,7 +23,7 @@ interface:
   serial:
     sensors:
       '/dev/ttyS1':
-        pms3003:
+        sds011:
           baudrate: 9600
           timeout: 2
   i2c:
