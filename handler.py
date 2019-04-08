@@ -1,3 +1,4 @@
+import os
 import yaml
 import time
 import datetime
@@ -21,12 +22,12 @@ class Handler:
     __prefixes = {}
     __devices_files = {}
 
-    __devices = {'i2c':{},'serial':{}}
+    __devices = {'i2c':{},'serial':{},'system':{}}
 
     __devices_types = {'sensors':'sensors','displays':'displays'}
 
     __hostname = ""
-
+                                                                                     
     def __init__(self,config):
         self.__bus_count = config['bus']['count']
         self.__prefixes = config['prefixes']
@@ -34,9 +35,21 @@ class Handler:
         self.__device_info = config['devices']
         self.__hostname = socket.gethostname()
         self.__config = config['custom']
+        self.scan_system();
         self.scan_i2c();
         self.scan_serial();
 
+    def scan_system(self):
+        interface = 'system'
+        system = self.__get_devices_info(interface)
+        for type in system:
+            devices = system[type]
+            for address in devices:
+                self.__devices[interface][address] = {'source':{},'module':{}}
+                for device in devices[address]:
+                    self.__devices[interface][address]['module'][device] = {'type':type,'action':{}}
+                    config = {} #{'terminal':address,'baudrate':devices[address][device]['baudrate'],'timeout':devices[address][device]['timeout']}
+                    self.__devices[interface][address]['module'][device]['action'] = self.__include_module(device,{'interface':interface},address,config)
     def scan_serial(self):
         interface = 'serial'
         serial = self.__get_devices_info(interface);
@@ -116,9 +129,15 @@ class Handler:
                 data = self.__cache_get("influxdb/batchData")+source_data
                 influx = Databases.InfluxDB(self.__config['databases']['influxdb'])
                 result = influx.write_to_db(data)
+                print("Result: {}".format(result))
                 if result is not None:
                     self.__cache_set("influxdb/batchCount",0)
                     self.__cache_set("influxdb/batchData","")
+                else:
+                    batch_value = self.__cache_get("influxdb/batchData")+source_data
+                    self.__cache_set("influxdb/batchData",batch_value)
+                    current = cache_value+1
+                    self.__cache_set("influxdb/batchCount",current)
             print(source_data)
             source_data = ""
 
@@ -157,10 +176,13 @@ class Handler:
         for prefix in self.__prefixes:
             module_path = self.__prefixes[prefix] + device + "." + device.upper()
             try:
+                print(module_path)
                 if bus['interface']=='i2c':
                     module = DClass.load(module_path)(bus['number'],int(address,16))
                 elif bus['interface']=='serial':
                     module = DClass.load(module_path)(additional)
+                elif bus['interface']=='system':
+                    module = DClass.load(module_path)()
                 module_status = True
             except:
                 module_status = False
@@ -172,7 +194,8 @@ class Handler:
 
 if __name__ == "__main__":
     ## Just sample
-    configuration = yaml.load(open('config.yaml','r').read());
+    full_path = "{}/{}".format(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
+    configuration = yaml.load(open(full_path,'r').read());
     databases = configuration['databases']
     prefixes = configuration['prefixes']
     interfaces = configuration['interface']

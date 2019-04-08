@@ -34,7 +34,9 @@ class SDS011:
             sum += data[i]
         sum = sum - 256
         checksum = data[8]
-
+        if sum > 256:
+            sum = sum - 256        
+        print("{}/{}".format(sum,checksum))
         if (sum!=checksum):
             self.serial.close()
             self.__open()
