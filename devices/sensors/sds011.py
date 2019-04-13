@@ -17,9 +17,15 @@ class SDS011:
     def get_data(self):
         source = self.__read()
 
-        pm25 = (self.__decode(source[3],source[2])/10)
-        pm100 = (self.__decode(source[5],source[4])/10)
-        data = {'pm2.5':pm25,'pm10.0':pm100}
+        pm25 = 0
+        pm100 = 0
+        available = 0
+        if source is not None:
+            available = 1
+            pm25 = (self.__decode(source[3],source[2])/10)
+            pm100 = (self.__decode(source[5],source[4])/10)
+
+        data = {'pm25':pm25,'pm100':pm100,'available':available}
 
         return data
 
@@ -29,16 +35,21 @@ class SDS011:
     def __read(self):
         data = self.serial.read(self.__bytes)
 
-        sum = 0
-        for i in range(2,8):
-            sum += data[i]
-        sum = sum - 256
-        checksum = data[8]
+        if len(data) == self.__bytes:
+            sum = 0
+            for i in range(2,8):
+                sum += data[i]
+            sum = sum - 256
+            checksum = data[8]
+            if sum > 256:
+                sum = sum - 256
 
-        if (sum!=checksum):
-            self.serial.close()
-            self.__open()
-            return self.__read()
+            if (sum!=checksum):
+                self.serial.close()
+                self.__open()
+                return self.__read()
+        else:
+            data = None
 
         return data
 

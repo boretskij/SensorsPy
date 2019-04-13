@@ -1,4 +1,5 @@
 import serial
+import time
 
 class PMS3003:
 
@@ -40,6 +41,8 @@ class PMS3003:
         self.serial = serial.Serial(self.__config['terminal'], baudrate = self.__config['baudrate'], timeout = self.__config['timeout'])
 
     def __read(self):
+        self.serial.reset_input_buffer()
+        self.serial.reset_output_buffer()
         data = self.serial.read(self.__bytes)
         sum = 0
         for i in range(0,22):
@@ -56,7 +59,9 @@ class PMS3003:
 
 
 ## Sample
-#while True:
-#    pms = PMS3003({'terminal':'/dev/ttyS1','baudrate':9600,'timeout':2})
-#    data = pms.get_data()
-#    print(data)
+if __name__=='__main__':
+    pms = PMS3003({'terminal':'/dev/ttyS2','baudrate':9600,'timeout':2})
+    while True:
+        time.sleep(1)    
+        data = pms.get_data()
+        print(data)

@@ -53,6 +53,8 @@ class PMS5003:
         self.serial = serial.Serial(self.__config['terminal'], baudrate = self.__config['baudrate'], timeout = self.__config['timeout'])
 
     def __read(self):
+        self.serial.reset_input_buffer()
+        self.serial.reset_output_buffer()
         data = self.serial.read(self.__bytes)
         sum = 0
         for i in range(0,29):
