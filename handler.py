@@ -27,7 +27,7 @@ class Handler:
     __devices_types = {'sensors':'sensors','displays':'displays'}
 
     __hostname = ""
-                                                                                     
+
     def __init__(self,config):
         self.__bus_count = config['bus']['count']
         self.__prefixes = config['prefixes']
@@ -108,14 +108,18 @@ class Handler:
                                 elif data['backlight']==False:
                                     self.__devices[interface][bus]['module'][module]['action'].noBacklight()
 
-    def write_to_db(self,data,database):
+    def write_to_db(self,data,database,namespace="measurements"):
         if database=="InfluxDB":
             time = self.__prepare_influx_time()
             source_data = ""
-            template = '{},sensor={},hostname={} value={} {}\n'
+            template = '{},sensor={},hostname={} {} {}\n'
             for device in data:
+                values = []
                 for measurement in data[device]:
-                    source_data += template.format(measurement,device,self.__hostname,data[device][measurement],time)
+                    values.append("{}={}".format(measurement,data[device][measurement]))
+                    #source_data += template.format(measurement,device,self.__hostname,data[device][measurement],time)
+                source_data += template.format(namespace,device,self.__hostname,",".join(values),time)
+                print(source_data)
             cache_value = self.__cache_get("influxdb/batchCount")
             if cache_value==None:
                 self.__cache_set("influxdb/batchCount",1)
@@ -210,3 +214,4 @@ if __name__ == "__main__":
         time.sleep(1)
 #        print(data)
         handler.write_to_db(data,"InfluxDB")
+#        quit()
