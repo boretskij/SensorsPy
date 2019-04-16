@@ -14,6 +14,11 @@ databases:
     database: 'test'
     username: 'test'
     password: 'test'
+save:
+  batch: 1800
+reboot:
+  batch: 1200
+  attempt: 5
 scan:
   i2c: 1
   type: 'whitelist'

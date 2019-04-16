@@ -50,6 +50,7 @@ class Handler:
                     self.__devices[interface][address]['module'][device] = {'type':type,'action':{}}
                     config = {} #{'terminal':address,'baudrate':devices[address][device]['baudrate'],'timeout':devices[address][device]['timeout']}
                     self.__devices[interface][address]['module'][device]['action'] = self.__include_module(device,{'interface':interface},address,config)
+
     def scan_serial(self):
         interface = 'serial'
         serial = self.__get_devices_info(interface);
@@ -117,9 +118,7 @@ class Handler:
                 values = []
                 for measurement in data[device]:
                     values.append("{}={}".format(measurement,data[device][measurement]))
-                    #source_data += template.format(measurement,device,self.__hostname,data[device][measurement],time)
                 source_data += template.format(namespace,device,self.__hostname,",".join(values),time)
-                print(source_data)
             cache_value = self.__cache_get("influxdb/batchCount")
             if cache_value==None:
                 self.__cache_set("influxdb/batchCount",1)
@@ -133,7 +132,6 @@ class Handler:
                 data = self.__cache_get("influxdb/batchData")+source_data
                 influx = Databases.InfluxDB(self.__config['databases']['influxdb'])
                 result = influx.write_to_db(data)
-                print("Result: {}".format(result))
                 if result is not None:
                     self.__cache_set("influxdb/batchCount",0)
                     self.__cache_set("influxdb/batchData","")
@@ -142,9 +140,17 @@ class Handler:
                     self.__cache_set("influxdb/batchData",batch_value)
                     current = cache_value+1
                     self.__cache_set("influxdb/batchCount",current)
+                    if cache_value>=self.__config['save']['batch']:
+                        self.save_data(batch_value)
             print(source_data)
             source_data = ""
 
+    def save_data(self,data,name,path="data"):
+        fullPath = "{}/{}".format(path,name)
+        f = open(fullPath,'w+')
+        f.write(data)
+        f.close()
+        
     def __get_device_name(self,interface,address):
         device = {}
         info_devices = self.__get_devices_info(interface)
@@ -201,11 +207,13 @@ if __name__ == "__main__":
     full_path = "{}/{}".format(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
     configuration = yaml.load(open(full_path,'r').read());
     databases = configuration['databases']
+    reboot = configuration['reboot']
+    save = configuration['save']
     prefixes = configuration['prefixes']
     interfaces = configuration['interface']
 #    quit();
     handler = Handler(
-                      {'custom':{'databases':databases},
+                      {'custom':{'databases':databases,'reboot':reboot,'save':save},
                       'bus':{'count':1},
                       'prefixes':prefixes,
                       'files':'dd', 'devices':{'interface':interfaces}})
