@@ -150,7 +150,7 @@ class Handler:
         f = open(fullPath,'w+')
         f.write(data)
         f.close()
-        
+
     def __get_device_name(self,interface,address):
         device = {}
         info_devices = self.__get_devices_info(interface)
@@ -207,8 +207,8 @@ if __name__ == "__main__":
     full_path = "{}/{}".format(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
     configuration = yaml.load(open(full_path,'r').read());
     databases = configuration['databases']
-    reboot = configuration['reboot']
-    save = configuration['save']
+    reboot = configuration['actions']['reboot']
+    save = configuration['actions']['save']
     prefixes = configuration['prefixes']
     interfaces = configuration['interface']
 #    quit();
