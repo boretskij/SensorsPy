@@ -3,6 +3,7 @@ import yaml
 import time
 import datetime
 import socket
+import json
 
 import lib.loader as DClass
 import system.smbus as SMBus
@@ -15,6 +16,8 @@ class Handler:
     __cache = {}
 
     __config = {}
+
+    __monitor = {'queue':0,'attempt':0}
 
     __db__config = {'batch':10}
 
@@ -109,6 +112,24 @@ class Handler:
                                 elif data['backlight']==False:
                                     self.__devices[interface][bus]['module'][module]['action'].noBacklight()
 
+    def monitor(self, info):
+        reboot_batch = self.__config['reboot']['batch']
+        reboot_attempt = self.__config['reboot']['attempt']
+        path = os.path.dirname(os.path.realpath(__file__))
+        folder_name = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')
+        full_path = "{}/data/{}/".format(path,folder_name)
+        if info['queue']>=reboot_batch or info['attempt']>=reboot_attempt:
+            print("Initiate reboot...")
+            os.mkdir(full_path)
+            file_full_path = "{}/{}".format(full_path,"dump.sp")
+            file = open(file_full_path,'w+')
+            file.write(json.dumps(info['source']))
+            file.flush()
+            file.close()
+            time.sleep(2)
+            print("Dump finished. Start reboot...")
+            os.system('shutdown -r now')
+
     def write_to_db(self,data,database,namespace="measurements"):
         if database=="InfluxDB":
             time = self.__prepare_influx_time()
@@ -140,8 +161,16 @@ class Handler:
                     self.__cache_set("influxdb/batchData",batch_value)
                     current = cache_value+1
                     self.__cache_set("influxdb/batchCount",current)
-                    if cache_value>=self.__config['save']['batch']:
-                        self.save_data(batch_value)
+                    self.__monitor['attempt'] = self.__monitor['attempt'] + 1
+                    self.__monitor['queue'] = self.__cache_get("influxdb/batchCount")
+                    self.monitor({'queue':self.__monitor['queue'],
+                                  'attempt':self.__monitor['attempt'],
+                                  'source':{
+                                            'data':self.__cache_get("influxdb/batchData"),
+                                            'count': self.__cache_get("influxdb/batchCount")
+                                 }})
+#                    if cache_value>=self.__config['save']['batch']:
+#                        self.save_data(batch_value)
             print(source_data)
             source_data = ""
 
