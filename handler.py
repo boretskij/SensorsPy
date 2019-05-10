@@ -120,7 +120,7 @@ class Handler:
         full_path = "{}/data/{}/".format(path,folder_name)
         if info['queue']>=reboot_batch or info['attempt']>=reboot_attempt:
             print("Initiate reboot...")
-            os.mkdir(full_path)
+            os.makedirs(full_path)
             file_full_path = "{}/{}".format(full_path,"dump.sp")
             file = open(file_full_path,'w+')
             file.write(json.dumps(info['source']))
