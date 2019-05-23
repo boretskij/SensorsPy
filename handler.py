@@ -240,10 +240,11 @@ if __name__ == "__main__":
     save = configuration['actions']['save']
     prefixes = configuration['prefixes']
     interfaces = configuration['interface']
+    count = configuration['scan']['i2c']
 #    quit();
     handler = Handler(
                       {'custom':{'databases':databases,'reboot':reboot,'save':save},
-                      'bus':{'count':1},
+                      'bus':{'count':count},
                       'prefixes':prefixes,
                       'files':'dd', 'devices':{'interface':interfaces}})
     while True:
