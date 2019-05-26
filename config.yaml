@@ -25,7 +25,13 @@ scan:
   type: 'whitelist'
 prefixes:
   sensors: 'devices.sensors.'
+  system: 'devices.external.'
 interface:
+  system:
+    sensors:
+      external:
+        orangepi2giot:
+          orangepi2giot
   serial:
     sensors:
       '/dev/ttyS1':

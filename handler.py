@@ -38,9 +38,9 @@ class Handler:
         self.__device_info = config['devices']
         self.__hostname = socket.gethostname()
         self.__config = config['custom']
-        self.scan_system();
-        self.scan_i2c();
-        self.scan_serial();
+        self.scan_system()
+        self.scan_i2c()
+        self.scan_serial()
 
     def scan_system(self):
         interface = 'system'
