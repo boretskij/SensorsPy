@@ -1,4 +1,7 @@
 import os
+import socket
+import fcntl
+import struct
 
 class HostSystem:
 
@@ -18,6 +21,15 @@ class HostSystem:
             if os.path.isfile(source):
                 self.temp_source = source
                 break
+                
+    def get_ip_address(self,ifname): # Thanks stackoverflow https://stackoverflow.com/questions/6243276/how-to-get-the-physical-interface-ip-address-from-an-interface/17667982 but added small modifications
+        interface = ifname.encode()
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return socket.inet_ntoa(fcntl.ioctl(
+            s.fileno(),
+            0x8915,  # SIOCGIFADDR
+            struct.pack('256s', interface[:15])
+        )[20:24])
 
 ##    def GetInfo():
 ## /sys/class/thermal/t

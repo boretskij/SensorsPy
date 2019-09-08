@@ -18,6 +18,7 @@ class InfluxDB:
         self.database = config['database']
         self.__prepare_templates();
         self.__prepare_auth();
+        self.__response_codes = [201,204]
         self.http = HTTPReq({'auth_token':self.auth})
 
     def __prepare_templates(self):
@@ -37,4 +38,17 @@ class InfluxDB:
         return self.http.get(data)
 
     def write_to_db(self,data):
-        return self.http.post_binary(self.__templates['write'],data.encode(),True)
+        response = {'status':False,'headers':None,'details':''}
+        http_response = self.http.post_binary(self.__templates['write'],data.encode(),True)
+        if http_response != None:
+            code = http_response.getcode()
+            if code in self.__response_codes:
+                response['status'] = True
+                response['headers'] = http_response.getheaders()
+            else:
+                response['status'] = False
+                response['details'] = "Invalid response code. Result: {}".format(code)
+        else:
+            response['status'] = False
+            response['details'] = 'Network or configuration error'
+        return response
