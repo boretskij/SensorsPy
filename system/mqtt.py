@@ -14,6 +14,7 @@ class MQTT:
 
     def __init__(self,configuration):
         self.host = configuration['host']
+        self.client_id = "yellowline.online" if 'client_id' not in configuration else configuration['client_id']
         self.default_publish = configuration['default_publish']
         self.loop = asyncio.get_event_loop()
         self.status = True
@@ -68,7 +69,7 @@ class MQTT:
 
     @asyncio.coroutine
     def __connect(self):
-        connect = MQTTClient(config={'keep_alive': 3600,'ping_delay':10,'reconnect_retries':30,'reconnect_max_interval':10,'auto_reconnect':True})
+        connect = MQTTClient(config={'keep_alive': 3600,'ping_delay':10,'reconnect_retries':30,'reconnect_max_interval':10,'auto_reconnect':True},client_id=self.client_id)
         yield from connect.connect(self.host)
         self.connect = connect
 

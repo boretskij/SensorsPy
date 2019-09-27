@@ -43,7 +43,7 @@ class Handler:
     __devices_types = {'sensors':'sensors','displays':'displays'}
 
     __hostname = ""
-    
+
     __status = multiprocessing.Manager().dict()
 
     def __init__(self,config):
@@ -131,12 +131,13 @@ class Handler:
            self.update_status('dead_queue_size',self.dead_queue.qsize())
            if current_size > batch_size:
                print(self.dead_queue.qsize())
+               current_timestamp = int(datetime.datetime.now().timestamp())
                result = self.write_to_db(self.queue,"InfluxDB")
                if result == True:
                    successfully = successfully + 1
-                   self.update_status('write_to_db',"Successfully on {}. Elements: {}".format(self.get_date(),current_size))
+                   self.update_status('write_to_db',{"comment":"Successfully on {}. Elements: {}".format(self.get_date(),current_size),"timestamp":current_timestamp})
                else:
-                   self.update_status('write_to_db',"Failed on {}. Elements: {}".format(self.get_date(),current_size))
+                   self.update_status('write_to_db',{"comment":"Failed on {}. Elements: {}".format(self.get_date(),current_size),"timestamp":current_timestamp})
                    failed = failed + 1
            if successfully >= safety_delay: # Temporary!!! Not good, should replace on another format (prepare database data on sender side)
                successfully = 0
@@ -146,8 +147,8 @@ class Handler:
            if failed >= safety_critical:
                failed = 0
                self.dump_data(self.dead_queue)
-    
-    def bot(self,command):
+
+    def bot(self,source,type="text"):
         def ping():
             return 'pong'
 
@@ -158,19 +159,31 @@ class Handler:
 
         def status():
             return self.__status.copy()
-            
+
+        def is_up():
+            return "up"
+
         def sender_status():
             return ""
-        
-        response = {'status':'success','content':''}
-        
+
+        response = {'status':'success','content':'','uuid':''}
+
+        command = ""
+
+        if type == "text":
+            command = source
+        elif type == "json":
+            command = source['command']
+            response['uuid'] = "" if 'uuid' not in source else source['uuid']
+
+
         commands = {
-          'ping': ping,
+          'is_up': is_up,
           'status': status,
           'network_info': network_info,
           'sender_status': sender_status
         }
-        
+
         if command in commands:
             response['content'] = commands[command]()
         else:
@@ -180,7 +193,17 @@ class Handler:
     #@asyncio.coroutine
     def mqtt_receive(self,publish,content):
         source = content['data'].decode()
-        response = self.bot(source)
+        source_json = None
+        response = ""
+        try:
+            source_json = json.loads(source)
+        except:
+            source_json = None
+        if source_json is not None:
+            response = self.bot(source_json,"json")
+        else:
+            response = self.bot(source)
+
         asyncio.ensure_future(publish('', response)) #json.dumps(self.__status.copy())))
 
     # Test function
@@ -194,18 +217,22 @@ class Handler:
         connect = "{}://{}:{}@{}:{}".format(config['type'],config['username'],config['password'],config['host'],config['port'])
         subscribe = config['topic'] + 'input/'
         publish = config['topic'] + 'output/'
-        mqtt = MQTT.MQTT({'host':connect,'default_publish':publish}) #'mqtts://guest:guest@mqtt.meteostation.online:8883'})
+        mqtt = MQTT.MQTT({'host':connect,'default_publish':publish, 'client_id': self.__hostname}) #'mqtts://guest:guest@mqtt.meteostation.online:8883'})
+        status = self.__status.copy()
+        status['type'] = "started"
+        info_command = json.dumps({'status':'success','content':status})
         loop.run_until_complete(mqtt.init())
         asyncio.ensure_future(mqtt.subscribe(subscribe,func))
         asyncio.ensure_future(mqtt.handler())
         asyncio.ensure_future(mqtt.monitor())
+        asyncio.ensure_future(mqtt.publish('',info_command))
         loop.run_forever()
 
     def get_sensor_data(self, sensors,wait=2):
         while True:
             for sensor in sensors:
                 source = sensor['action'].get_data()
-                self.update_status(sensor['status_name'],"Last get date: {}".format(str(datetime.datetime.now())))
+                self.update_status(sensor['status_name'],{"comment":"Last get date: {}".format(str(datetime.datetime.now())),"timestamp":int(datetime.datetime.now().timestamp()),"data":source})
                 self.queue.put({'data':source,
                                 'sensor':sensor['name'],
                                 'interface':sensor['interface'],
@@ -233,7 +260,7 @@ class Handler:
 
     def get_status_key(self,key):
         return self.__status[key]
-        
+
     def get_status(self):
         return self.__status.copy()
 
@@ -314,7 +341,7 @@ class Handler:
         file.write(source)
         file.flush()
         file.close()
-        
+
 
     def monitor(self, info):
         reboot_batch = self.__config['reboot']['batch']
@@ -422,6 +449,9 @@ class Handler:
 
 if __name__ == "__main__":
     ## Just sample
+
+    time.sleep(10)
+
     full_path = "{}/{}".format(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
     configuration = yaml.load(open(full_path,'r').read());
     databases = configuration['databases']
@@ -431,6 +461,7 @@ if __name__ == "__main__":
     interfaces = configuration['interface']
     host = configuration['host']
     servers = configuration['servers']
+#    time.sleep(180)
 #    quit();
     handler = Handler(
                       {'custom':
