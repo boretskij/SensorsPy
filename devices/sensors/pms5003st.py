@@ -63,15 +63,15 @@ class PMS5003ST:
         self.serial.reset_output_buffer()
         data = self.serial.read(self.__bytes)
         sum = 0
-        for i in range(0,35):
+        for i in range(0,37):
             sum += data[i]
 
-        checksum = self.__decode(data[36],data[37])
+        checksum = self.__decode(data[38],data[39])
 
-#        if (sum!=checksum):
-#            self.serial.close()
-#            self.__open()
-#            return self.__read()
+        if (sum!=checksum):
+            self.serial.close()
+            self.__open()
+            return self.__read()
 
         return data
 
