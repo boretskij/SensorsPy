@@ -2,7 +2,7 @@ import serial
 
 class PMS5003ST:
 
-    __bytes = 38
+    __bytes = 40
     __stop_byte = 66
 
     __config = {}
